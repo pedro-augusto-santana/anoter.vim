@@ -27,13 +27,14 @@ function! anoter#link#follow()
             call netrw#BrowseX(url, netrw#CheckIfRemote())
             return
         else
-            " this is a very naive implementation, and allows for lazy
-            " matching, but it's good enough, at least for now.
+            " this is a very naive implementation, but it's good enough
+            " at least for now.
             let url = split(url, '\v(#+)')
             let editcommand = 'edit ' . anoter#utils#abspath(url[0])
             execute editcommand
             if (len(url) == 2) " only if contains 2 parts multiple ids are ignored
-                call search('\v^(\s+)?(#+)(\s+)' . url[1])
+                " stricter regex, now follows only if EXACTLY matching header
+                call search('\v^(\s+)?(#+)(\s+)' . url[1] . '$')
             endif
         endif
     endif
