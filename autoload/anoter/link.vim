@@ -1,5 +1,5 @@
-" TODO add handling for image links: ![Descriptor](Image Link)
-let s:link_pattern = '\v(\[.{-}\]\(.{-}\))|(\[.{-}\]\[(\d+)?\])|(\[((\d+)|(.{-}))\]\:(\s+)?(\<.{-}\>|\S*)|\<.{-}\>)'
+" TODO add handling for image links: ![descriptor](image)
+let g:link_pattern = '\v(\[.{-}\]\(.{-}\))|(\[.{-}\]\[(\d+)?\])|(\[((\d+)|(.{-}))\]\:(\s+)?(\<.{-}\>|\S*)|\<.{-}\>)'
 function! anoter#link#follow()
     let link = anoter#link#match()
     if empty(link) | return | endif
@@ -19,6 +19,10 @@ function! anoter#link#follow()
         " needs to be wrapped in '<>' to work properly
         " FIXME url keeps getting matched with trailing ')'
         " for now using anoter#utils#strip to remove it
+        " FIXME fix edge case when there are parenthesis inside link
+        " descriptor, like: [something (note)](actual url) keeps getting
+        " matched with "note" being the link, changing regex to ignore
+        " parenthesis inside the [] might solve it
         let url = anoter#utils#strip(url)[1:-2] " trimming spaces and delimiters
         if empty(url) | return | endif
         if netrw#CheckIfRemote(url)
@@ -48,15 +52,15 @@ function! anoter#link#match()
     let col = col('.')
     let line = getline('.')
     let links = []
-    let lmatch = match(line, s:link_pattern, 0) " search for links on the current line
+    let lmatch = match(line, g:link_pattern, 0) " search for links on the current line
     if (lmatch < 0) | return | endif
-    let lend = matchend(line, s:link_pattern, lmatch) " find end of first matched link
+    let lend = matchend(line, g:link_pattern, lmatch) " find end of first matched link
     call add(links, [lmatch, lend]) " adds it to the current line link list"
     " admittedly this seems a little bit hacky, mostly because it is
     while (lmatch >= 0) " while there are links on the line, index them
-        let lmatch = match(line, s:link_pattern, lend)
+        let lmatch = match(line, g:link_pattern, lend)
         if lmatch < 0 | break | endif
-        let lend = matchend(line, s:link_pattern, lmatch)
+        let lend = matchend(line, g:link_pattern, lmatch)
         call add(links, [lmatch, lend])
     endwhile
 
@@ -69,9 +73,9 @@ function! anoter#link#match()
 endfunction
 
 function! anoter#link#findNext()
-    call search(s:link_pattern, 'pszw')
+    call search(g:link_pattern, 'pszw')
 endfunction
 
 function! anoter#link#findPrev()
-    call search(s:link_pattern, 'bpszw')
+    call search(g:link_pattern, 'bpszw')
 endfunction
