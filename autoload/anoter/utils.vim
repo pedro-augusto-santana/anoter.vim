@@ -1,5 +1,27 @@
-function! anoter#utils#strip(string)
-    return substitute(a:string, '^\s*\(.\{-}\)\s*$', '\1', '')
+" anoter - minimalist wiki plugin for (neo)vim.
+" Author: Pedro Augusto Santana
+" License: MIT
+
+function! anoter#utils#matchHL()
+    " adapted from: https://stackoverflow.com/a/37040415/11512974
+    let syntaxID = synID(line('.'), col('.'), 1)
+    return {'name': synIDattr(syntaxID, 'name'), 'linked': synIDattr(synIDtrans(syntaxID), 'name')}
+endfunction
+
+function! anoter#utils#matches(exp)
+    const syn = anoter#utils#matchHL()
+    return syn.name =~ a:exp
+endfunction
+
+function! anoter#utils#isExternalLink(link)
+    const l:linkExpr = '\v((http(s?)|file):\/\/(www\.)?)([a-zA-Z0-9@:%\-_\/\+~#=]*)(\.|\/)([a-zA-Z0-9@:%\-_\+~#=\/\.]*)'
+    return matchstr(a:link, l:linkExpr)
+endfunction
+
+function! anoter#utils#sysOpen(link)
+    " TODO add better error handling
+    " this is too simplistic
+    silent exec '!open ' . a:link
 endfunction
 
 function! anoter#utils#abspath(filespec)
@@ -20,4 +42,3 @@ function! anoter#utils#abspath(filespec)
     endtry
     return l:absoluteFilespec
 endfunction
-

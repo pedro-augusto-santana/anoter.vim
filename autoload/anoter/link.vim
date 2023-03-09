@@ -1,81 +1,54 @@
-" TODO add handling for image links: ![descriptor](image)
-let g:link_pattern = '\v(\[.{-}\]\(.{-}\))|(\[.{-}\]\[(\d+)?\])|(\[((\d+)|(.{-}))\]\:(\s+)?(\<.{-}\>|\S*)|\<.{-}\>)'
+" anoter - minimalist wiki plugin for (neo)vim.
+" Author: Pedro Augusto Santana
+" License: MIT
+
+" TODO add support for reference style links
+const s:mdLinkPattern   = '\v!?\[.{-}\](\(.{-}\)|\[\d+\])|\<.{-}\>'
+const s:urlPattern      = '\v\(.{-}\)|\<.{-}\>'
+const s:externalLinkPattern = '\v'
+
 function! anoter#link#follow()
-    let link = anoter#link#match()
-    if empty(link) | return | endif
-    let descriptor_pattern = '\v\[.{-}\]'
-    let url_pattern = '\v(\[(\d+)?\])|(\(.{-}\))|\<.{-}\>'
-    let descriptor = matchstr(link, descriptor_pattern)
-    " the url/reference part always start after the descriptor match ended"
-    let url = matchstr(link, url_pattern, matchend(link, descriptor_pattern))
-    if url =~ '\v\[(\d+)\]' " match self-referenced/numbered reference links
-        call searchpos('\v\[' . matchstr(url, '\v\d+') . '\]:.*', 's') " match link number
-        return
-    elseif (url =~ '\v\[(\s+)?\]')
-        call searchpos('\v['. descriptor[1:-1] . ']:.*', 's') " match the descriptor of the link
-        return
-    else " everything else is a normal link, and will be followed as such
-        " FIXME the "[descriptor]: url" format is not working right now, the url
-        " needs to be wrapped in '<>' to work properly
-        " FIXME url keeps getting matched with trailing ')'
-        " for now using anoter#utils#strip to remove it
-        " FIXME fix edge case when there are parenthesis inside link
-        " descriptor, like: [something (note)](actual url) keeps getting
-        " matched with "note" being the link, changing regex to ignore
-        " parenthesis inside the [] might solve it
-        let url = anoter#utils#strip(url)[1:-2] " trimming spaces and delimiters
-        if empty(url) | return | endif
-        if netrw#CheckIfRemote(url)
-            " I didn't want to depend on other plugins
-            " but is netrw so whatever
-            call netrw#BrowseX(url, netrw#CheckIfRemote())
-            return
-        else
-            " this is a very naive implementation, but it's good enough
-            " at least for now.
-            let url = split(url, '\v(#+)')
-            let editcommand = 'edit ' . anoter#utils#abspath(url[0])
-            execute editcommand
-            if (len(url) == 2) " only if contains 2 parts multiple ids are ignored
-                " stricter regex, now follows only if EXACTLY matching header
-                call search('\v^(\s+)?(#+)(\s+)' . url[1] . '$')
-            endif
+    const link = anoter#link#getUnderCursor()
+    if empty(link) || anoter#utils#matches('markdownCode*') | return | endif
+
+    const url = matchstr(link, s:urlPattern)[1:-2] " strip brackets/parenthesis
+    if empty(url) | return | endif
+
+    const matched = anoter#utils#isExternalLink(url)
+    if empty(matched) " if empty, is a local link
+        " handles direct reference to a heading
+        const ref = split(url, '\v(#+)')
+        execute "edit " . anoter#utils#abspath(ref[0])
+        if len(ref) > 1
+            call search('\v# ' . ref[1], '')
         endif
+        return
+    else " otherwise, it's a remote link, and opens with the system tool
+        call anoter#utils#sysOpen(matched)
+        return
     endif
 endfunction
 
-" this function was loosely based on vimwiki#base#matchstr_at_cursor from
-" the (excellent) vimwiki plugin
-function! anoter#link#match()
-    " BUG the matching returns nothing when in the closing delimiter of the
-    " url part of a markdown link. need to fix
-    let col = col('.')
-    let line = getline('.')
-    let links = []
-    let lmatch = match(line, g:link_pattern, 0) " search for links on the current line
-    if (lmatch < 0) | return | endif
-    let lend = matchend(line, g:link_pattern, lmatch) " find end of first matched link
-    call add(links, [lmatch, lend]) " adds it to the current line link list"
-    " admittedly this seems a little bit hacky, mostly because it is
-    while (lmatch >= 0) " while there are links on the line, index them
-        let lmatch = match(line, g:link_pattern, lend)
-        if lmatch < 0 | break | endif
-        let lend = matchend(line, g:link_pattern, lmatch)
-        call add(links, [lmatch, lend])
-    endwhile
+function! anoter#link#getUnderCursor()
+    let links   = []
+    const line  = getline('.')
+    const col   = col('.')
 
-    for pos in links
-        if (pos[0] < col && col < pos[1]) " unfortunately vimscript doesn't have "a < b < c" syntax
-            return line[pos[0]:pos[1]] " return the correct link
-        endif
-    endfor
-    return '' " if not inside the correct position, return nothing
+    let start = match(line, s:mdLinkPattern, 0)
+    while start >= 0
+        let end = matchend(line, s:mdLinkPattern, start)
+        call add(links, [start + 1, end])
+        let start = match(line, s:mdLinkPattern, end)
+    endwhile
+    const curr = filter(links, { idx, val -> val[0] <= col && val[1] >= col })
+    if empty(curr) | return | endif
+    return strpart(line, curr[0][0] - 1, curr[0][1] - curr[0][0] + 1) " start - 1, length + 1
 endfunction
 
 function! anoter#link#findNext()
-    call search(g:link_pattern, 'pszw')
+    call search(s:mdLinkPattern,'spz')
 endfunction
 
 function! anoter#link#findPrev()
-    call search(g:link_pattern, 'bpszw')
+    call search(s:mdLinkPattern, 'b')
 endfunction

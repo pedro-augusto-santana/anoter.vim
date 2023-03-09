@@ -1,0 +1,14 @@
+** TODO **
+* handle reference links:
+    [descriptor][ref. number]
+    [ref. number]: url
+
+* fuzzy search for tags using 'vimgrep'
+* planner events
+* zettelkasten module (?)
+
+** DONE **
+* basic TODO list management, incl. 'done' message for finished tasks
+* link handling, both local files and remote links
+* custom syntax highlighting for tasks
+* custom tag system (inspired by zim-desktop-wiki)

@@ -1,41 +1,54 @@
-" anoter - simple vimscript notetaking plugin
+" anoter - minimalist wiki plugin for (neo)vim.
 " Author: Pedro Augusto Santana
 " License: MIT
-" function to initialize the plugin and all configurations
+
 function! anoter#init()
-    if !exists('g:notes_dir')
-        let g:notes_dir = expand('~/notes/')
-        let g:zettel_dir = g:notes_dir . 'zettel/'
+    if !exists("g:anoter_home")
+        let g:anoter_home = fnamemodify("~", ":p") . "notes/"
     endif
 
-    " https://orgmode.org/guide/Multi_002dstate-Workflow.html
-    " something similar to what orgmode has implemented, in other words, I
-    " absolutely shamelessly copied it from orgmode.
-    if !exists('g:anoter_todo_states')
-        let g:anoter_todo_states = ['TODO', 'PREPARE', 'DOING']
-    endif
-    if !exists('g:anoter_done_states')
-        let g:anoter_done_states = ['DONE', 'ENDED']
-    endif
-    if !exists('g:anoter_fail_states')
-        let g:anoter_fail_states = ['WONTDO', 'CANCELLED']
-    endif
-
-    let g:anoter_workflow_states = g:anoter_todo_states + g:anoter_done_states + g:anoter_fail_states
-
-    if !exists('g:anoter_log_timer')
-        let g:anoter_log_timer = v:true
+    if !exists("g:anoter_task_states")
+        " follows a (kind of) org-mode philosophy, so that
+        " the states are cycleable and can be added or removed
+        " at will
+        " failed states are it's own cycle, isolated from pending-finished
+        let g:anoter_task_states = {
+                    \ "pending": ['TODO', 'PREPARING', 'DOING'],
+                    \ "done": ['DONE', 'COMPLETED'],
+                    \ "failed": ['WONTDO', 'CANCELED']
+                    \ }
     endif
 
-    if !exists('g:anoter_strftime')
-        let g:anoter_strftime = '%d/%m/%Y : %Hh%M' " default completion timestamp
+    if !exists("g:anoter_done_label")
+        let g:anoter_done_label = "Done"
     endif
 
-    if !exists('g:anoter_schedule')
-        let g:anoter_schedule = ['DUE', 'AT', 'SCHEDULED']
+    if !exists("g:anoter_done_strftime")
+        let g:anoter_done_strftime = "%d %b %Y | %H:%M"
+    endif
+
+endfunction
+
+function! anoter#index()
+    let rootExists = anoter#checkRootDir()
+    if !rootExists | return | endif
+    execute "edit " . resolve(g:anoter_home . "index.md")
+endfunction
+
+function! anoter#checkRootDir()
+    if isdirectory(g:anoter_home) | return v:true | endif
+    let createdir = input("[anoter] notes directory not found, create? (y/n): ", "y")
+    redraw
+    if (createdir =~? "y")
+        call mkdir(g:anoter_home, "p")
+        echomsg "[anoter] created notes directory at: " . g:anoter_home
+        return v:true
+    else
+        echomsg "[anoter] aborted directory creation."
+        return v:false
     endif
 endfunction
 
-" global keymappings
-nnoremap <silent> <leader>nz :call anoter#zettel#new()<CR>
-nnoremap <silent> <leader>ni :call anoter#notes#index() <CR>
+" plugin keymappings
+nnoremap <silent><leader>ni :call anoter#index()<CR>
+nnoremap <silent><leader>tni :tabnew \| :call anoter#index()<CR>
