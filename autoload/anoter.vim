@@ -37,5 +37,5 @@ function! anoter#init()
 endfunction
 
 " global keymappings
-nnoremap <silent> <leader>Nz :call anoter#zettel#new()<CR>
+nnoremap <silent> <leader>nz :call anoter#zettel#new()<CR>
 nnoremap <silent> <leader>ni :call anoter#notes#index() <CR>
