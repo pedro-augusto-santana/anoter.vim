@@ -14,7 +14,7 @@ function! anoter#utils#matches(exp)
 endfunction
 
 function! anoter#utils#isExternalLink(link)
-    const l:linkExpr = '\v((http(s?)|file):\/\/(www\.)?)([a-zA-Z0-9@:%\-_\/\+~#=]*)(\.|\/)([a-zA-Z0-9@:%\-_\+~#=\/\.]*)'
+    const l:linkExpr = '\v((http(s?)|file):\/\/(www\.)?)([a-zA-Z0-9@:%\-_\/\+~#=]*)(\.|\/)([a-zA-Z0-9@:\?%\-_\+~#=\/\.]*)'
     return matchstr(a:link, l:linkExpr)
 endfunction
 
