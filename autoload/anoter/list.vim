@@ -17,38 +17,27 @@ function! anoter#list#toggle()
         const state = matchstr(line, '\v^\w+', start)
         const pos = index(s:task_states, state)
         if pos < 0 | return | endif
-        call anoter#list#changeState(state, pos)
+        call anoter#list#changeState(state, s:task_states[(pos + 1) % len(s:task_states)])
         return
     endif
 endfunction
 
-function! anoter#list#changeState(state, position)
-    const nline = substitute(getline('.'), a:state, s:task_states[(a:position + 1) % len(s:task_states)], '')
+function! anoter#list#changeState(state, next)
+    const nline = substitute(getline('.'), a:state, a:next, '')
     call setline('.', nline)
-    call anoter#list#doneLine(a:state, a:position) " handles the completed line below task
+    call anoter#list#doneLine(a:state, a:next) " handles the completed line below task
 endfunction
 
-function! anoter#list#doneLine(state, position)
-    const next = s:task_states[(a:position + 1) % len(s:task_states)]
-
+function! anoter#list#doneLine(state, next)
     const has_done_lbl = getline(line('.') + 1) =~ '\v^\>\s+' . g:anoter_done_label . '.*'
     if has_done_lbl
         call deletebufline('%', line('.') + 1, line('.') + 1)
     endif
 
-    if index(g:anoter_task_states.done, next) >= 0
+    if index(g:anoter_task_states.done, a:next) >= 0
         call append(line('.'), '> ' . g:anoter_done_label . ' ' . strftime(g:anoter_done_strftime))
     endif
 endfunction
 
-function! anoter#list#wontDo(state, position)
-    const next = g:anoter_task_states.failed[(a:position + 1) % len(g:anoter_task_states.failed)]
-    const has_done_lbl = getline(line('.') + 1) =~ '\v^\>\s+' . g:anoter_done_label . '.*'
-    if has_done_lbl
-        call deletebufline('%', line('.') + 1, line('.') + 1)
-    endif
-
-    if index(g:anoter_task_states.failed, next) >= 0
-        call append(line('.'), '> ' . g:anoter_done_label . ' ' . strftime(g:anoter_done_strftime))
-    endif
+function! anoter#list#wontDo()
 endfunction
