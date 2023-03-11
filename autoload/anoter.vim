@@ -14,7 +14,7 @@ function! anoter#init()
         " failed states are it's own cycle, isolated from pending-finished
         let g:anoter_task_states = {
                     \ "pending": ['TODO', 'PREPARING', 'DOING'],
-                    \ "done": ['DONE', 'COMPLETED'],
+                    \ "done": ['DONE'],
                     \ "failed": ['WONTDO', 'CANCELED']
                     \ }
     endif
