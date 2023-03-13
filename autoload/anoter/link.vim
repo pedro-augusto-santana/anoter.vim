@@ -2,7 +2,9 @@
 " Author: Pedro Augusto Santana
 " License: MIT
 
-" TODO add support for reference style links
+" TODO
+"   add support for reference style links
+"   mess with \zs and \ze to keep search from matching inside code blocks
 const s:mdLinkPattern   = '\v!?\[.{-}\](\(.{-}\)|\[\d+\])|\<.{-}\>'
 const s:urlPattern      = '\v\(.{-}\)|\<.{-}\>'
 const s:externalLinkPattern = '\v'
