@@ -21,9 +21,6 @@ function! anoter#list#toggle()
     const pos = index(s:failed_states + s:task_states, state)
 
     if pos < len(s:failed_states)
-        " if it's a failed state, go back to first task state by default
-        " when toggling through states
-        " (not the best solution but works, for now)
         call anoter#list#changeState(state, s:task_states[0])
         return
     endif
