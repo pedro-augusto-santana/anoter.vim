@@ -8,11 +8,11 @@ syn region markdownQuote start=/\v^(\s+)?\>/ end=/\v$/
 hi link anoterTagItem Comment
 hi link markdownQuote Comment
 
+const s:list_regex = '^(\+|\*|(\d+\.)|-)(:)?\s+'
 
-" TODO find a nicer way to deal with the list item regex
-exe 'syn match anoterTodoItem /\v^(\+|\*|(\d+\.)|-)(:)?\s+(' . join(g:anoter_task_states.pending, '|') . ')(\s+|:)/'
-exe 'syn match anoterDoneItem /\v^(\+|\*|(\d+\.)|-)(:)?\s+(' . join(g:anoter_task_states.done, '|') . ')(\s+|:)/'
-exe 'syn match anoterFailItem /\v^(\+|\*|(\d+\.)|-)(:)?\s+(' . join(g:anoter_task_states.failed, '|') . ')(\s+|:)/'
+exe 'syn match anoterTodoItem /\v' . s:list_regex . '(' . join(g:anoter_task_states.pending, '|') . ')(\s+|:)/'
+exe 'syn match anoterDoneItem /\v' . s:list_regex . '(' . join(g:anoter_task_states.done, '|') . ')(\s+|:)/'
+exe 'syn match anoterFailItem /\v' . s:list_regex . '(' . join(g:anoter_task_states.failed, '|') . ')(\s+|:)/'
 
 hi link anoterTodoItem Purple
 hi link anoterDoneItem Green
