@@ -27,6 +27,11 @@ endfunction
 function! anoter#utils#abspath(filespec)
     " function extracted from https://stackoverflow.com/a/22860907/11512974
     " with some (very) minor alterations
+
+    " this matching doesn't sit well with me at least find another of
+    " matching way later
+    let l:parsedfspec = substitute(a:filespec, '^.*\$ROOT\/', g:anoter_home, '')
+
     if expand('%:h') !=# '.'
         let l:save_cwd = getcwd()
         let l:chdirCommand = (haslocaldir() ? 'lchdir!' : 'chdir!')
@@ -34,7 +39,7 @@ function! anoter#utils#abspath(filespec)
     endif
     try
         " Get the full path to a:filespec, relative to the current file's directory.
-        let l:absoluteFilespec = fnamemodify(a:filespec, ':p')
+        let l:absoluteFilespec = fnamemodify(l:parsedfspec, ':p')
     finally
         if exists('l:save_cwd')
             execute l:chdirCommand fnameescape(l:save_cwd)
