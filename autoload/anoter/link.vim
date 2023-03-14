@@ -9,6 +9,12 @@ const s:mdLinkPattern   = '\v!?\[.{-}\](\(.{-}\)|\[\d+\])|\<.{-}\>'
 const s:urlPattern      = '\v\(.{-}\)|\<.{-}\>'
 const s:externalLinkPattern = '\v'
 
+" NOTE maybe change this to global configuration? that way whoever uses it can
+" set it to their use case.
+const s:extFileList = ['mp3', 'mp4', 'jpeg', 'png', 'docx',
+            \ 'xlsx', 'xls', 'pdf', 'pptx', 'ppt', 'jpg',
+            \ 'tiff', 'tif', 'mkv', 'webp', 'epub']
+
 function! anoter#link#follow()
     const link = anoter#link#getUnderCursor()
     if empty(link) || anoter#utils#matches('markdownCode*') | return | endif
@@ -17,7 +23,14 @@ function! anoter#link#follow()
     if empty(url) | return | endif
 
     const matched = anoter#utils#isExternalLink(url)
-    if empty(matched) " if empty, is a local link
+    if empty(matched)
+        const ext = fnamemodify(url, ':e')
+        if index(s:extFileList, ext) > 0
+            " if the file extension matches any of the external links
+            " extensions, open it with system tool.
+            call anoter#utils#sysOpen(anoter#utils#abspath(url))
+            return
+        endif
         " handles direct reference to a heading
         const ref = split(url, '\v(#+)')
         execute "edit " . anoter#utils#abspath(ref[0])
@@ -25,8 +38,8 @@ function! anoter#link#follow()
             call search('\v# ' . ref[1], '')
         endif
         return
-    else " otherwise, it's a remote link, and opens with the system tool
-        call anoter#utils#sysOpen(matched)
+    else
+        call anoter#utils#sysOpen(anoter#utils#abspath(matched))
         return
     endif
 endfunction
