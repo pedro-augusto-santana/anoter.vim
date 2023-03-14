@@ -2,7 +2,7 @@
 " Author: Pedro Augusto Santana
 " License: MIT
 
-syn match anoterTagItem "\v(\s+|^)\@.*(\s+|$)"
+syn match anoterTagItem "\v(\s+|^)\@\S+"
 syn region markdownQuote start=/\v^(\s+)?\>/ end=/\v$/
 
 hi link anoterTagItem Comment
